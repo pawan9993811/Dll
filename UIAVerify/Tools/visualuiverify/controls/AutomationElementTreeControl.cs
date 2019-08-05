@@ -654,233 +654,26 @@ namespace VisualUIAVerify.Controls
             }
         }
 
-
-        private void addElementStripMenuItem_Click22(object sender, EventArgs e)
-        {
-            if (this.SelectedNode != null)
-            {
-                var parents = GetAllParents();
-                XmlDocument doc = null;
-                bool noRoot = false;
-                var fileName = @"C:\Temp\nodes.xsd";
-                if (File.Exists(fileName))
-                {
-                    doc = new XmlDocument();
-                    try
-                    {
-                        doc.Load(fileName);
-                    }
-                    catch { noRoot = true; }
-                }
-
-                if (this.SelectedNode != null)
-                {
-                    if (doc != null && !noRoot)
-                    {
-                        string xpath = @"//Root/Node";
-                        TreeNode node; XmlNode parent = null; int i = 0;
-                        for (; i < parents.Count; i++)
-                        {
-                            node = parents[i];
-                            var aeNode = (AutomationElementTreeNode)node.Tag;
-                            var aEl = aeNode.AutomationElement.Current;
-                            var nodes = doc.SelectNodes(xpath);
-                            bool insertNow = false;
-                            foreach (XmlNode node1 in nodes)
-                            {
-                                insertNow = true;
-                                XmlNode propName, propId;
-                                propName = ((System.Xml.XmlElement)node1).SelectSingleNode("SearchCriteria/Property[@Name]");
-                                propId = ((System.Xml.XmlElement)node1).SelectSingleNode("SearchCriteria/Property[@AutomationId]");
-                                if (propName != null &&
-                                    propName.Attributes[0].Value == aEl.Name && propId != null &&
-                                     propId.Attributes[0].Value == aEl.AutomationId)
-                                { parent = node1; insertNow = false; break; }
-                                else if (propName == null &&
-                                     propId != null &&
-                                    propId.Attributes[0].Value == aEl.AutomationId)
-                                { parent = node1; insertNow = false; break; }
-                                else if (propId == null &&
-                                     propName != null &&
-                                    propName.Attributes[0].Value == aEl.Name)
-                                { parent = node1; insertNow = false; break; }
-                            }
-                            if (insertNow)
-                            {
-                                for (int j = i; j < parents.Count; j++)
-                                {
-                                    node = parents[j];
-                                    aeNode = (AutomationElementTreeNode)node.Tag;
-                                    aEl = aeNode.AutomationElement.Current;
-                                    XmlElement child1 = doc.CreateElement("Node");
-
-                                    child1.SetAttribute("DispalyName", aEl.Name);
-                                    child1.SetAttribute(XMLAttributes.ApplicationType.ToString(), ApplicationType.Windows.ToString());
-                                    child1.SetAttribute(XMLAttributes.TechnologyName.ToString(), TechnologyName.White.ToString());
-                                    child1.SetAttribute("ControlType", aEl.LocalizedControlType);
-                                    XmlElement searchCritchild = doc.CreateElement("SearchCriteria");
-
-                                    if (!string.IsNullOrEmpty(aEl.AutomationId))
-                                    {
-                                        XmlElement propchildId = doc.CreateElement("Property");
-                                        propchildId.SetAttribute("AutomationId", aEl.AutomationId);
-                                        searchCritchild.AppendChild(propchildId);
-                                    }
-                                    if (!string.IsNullOrEmpty(aEl.ClassName))
-                                    {
-                                        XmlElement propchildName = doc.CreateElement("Property");
-                                        propchildName.SetAttribute("Name", aEl.Name);
-                                        searchCritchild.AppendChild(propchildName);
-                                    }
-
-                                    child1.AppendChild(searchCritchild);
-
-                                    if (parent == null)
-                                        parent = doc.SelectNodes(@"//Root")[0];
-                                    parent.AppendChild(child1);
-
-                                    parent = child1;
-                                }
-                                break;
-                            }
-                            xpath = xpath + @" / Node";
-                        }
-                        doc.Save(fileName);
-                        if (i == parents.Count)
-                            MessageBox.Show("Element already exists");
-                    }
-                    else
-                    {
-                        /* doc = new XmlDocument();
-                        XmlElement rootEl = doc.CreateElement("Root");
-
-
-                       var prevEl = rootEl;
-                       foreach (var node in parents)
-                       {
-
-                           var aeNode = (AutomationElementTreeNode)node.Tag;
-                       var aEl = aeNode.AutomationElement.Current;*/
-                        UIControl control = new UIControl();
-                        foreach (var node in parents)
-                        {
-                            var aeNode = (AutomationElementTreeNode)node.Tag;
-                            var ElementInfo = aeNode.AutomationElement.Current;
-
-                            control.Name = "Window";
-                            control.ApplicationType = ApplicationTypes.Windows;
-                            control.TechnologyType = TechnologyTypes.White;
-
-                            //checkEmptyElement(control, ElementInfo);
-                            if (!string.IsNullOrEmpty(ElementInfo.AutomationId))
-                            {
-
-                                control.SearchCriteria.SearchProperties.Add("AutomationId", ElementInfo.AutomationId);
-                            }
-                            if (!string.IsNullOrEmpty(ElementInfo.ClassName))
-                            {
-
-                                control.SearchCriteria.SearchProperties.Add("Name", ElementInfo.Name);
-                            }
-
-                            RepositoryNode nodeInfo = new RepositoryNode();
-                            nodeInfo.ChildNodes.Add(control);
-
-                            RepositoryUtility utility = new RepositoryUtility();
-
-                            utility.WriteData(nodeInfo, fileName);
-
-                            /*XmlElement child1 = doc.CreateElement("Node");
-                              child1.SetAttribute("DispalyName", aEl.Name);
-                                child1.SetAttribute(XMLAttributes.ApplicationType.ToString(), ApplicationType.Windows.ToString());
-                                child1.SetAttribute(XMLAttributes.TechnologyName.ToString(), TechnologyName.White.ToString());
-                                child1.SetAttribute("ControlType", aEl.LocalizedControlType);
-                                XmlElement searchCritchild = doc.CreateElement("SearchCriteria");
-
-                                if (!string.IsNullOrEmpty(aEl.AutomationId))
-                                {
-                                    XmlElement propchildId = doc.CreateElement("Property");
-                                    propchildId.SetAttribute("AutomationId", aEl.AutomationId);
-                                    searchCritchild.AppendChild(propchildId);
-                                }
-                                if (!string.IsNullOrEmpty(aEl.ClassName))
-                                {
-                                    XmlElement propchildName = doc.CreateElement("Property");
-                                    propchildName.SetAttribute("Name", aEl.Name);
-                                    searchCritchild.AppendChild(propchildName);
-                                }
-                                child1.AppendChild(searchCritchild);
-
-
-                                  prevEl.AppendChild(child1);
-
-                                  prevEl = child1;
-                            }
-                             doc.AppendChild(rootEl);
-                        }
-                            doc.Save(fileName);
-                        }*/
-
-
-                        }
-                    }
-                }
-            }
-        }
-
         private void addElementStripMenuItem_Click(object sender, EventArgs e)
         {
             if (this.SelectedNode != null)
             {
-                var parents = GetAllParents();
-                XmlDocument doc = null;
-                bool noRoot = false;
-                //string fileName = getFileName(ref doc, ref noRoot);
-
-                if (this.SelectedNode != null)
-                {
-                    if (doc != null && !noRoot)
-                    {
-                        //UpdateXMl(parents, doc, fileName);
-                    }
-                    else
-                    {
-                        doc = CreateXML(parents);
-                    }
-                    //  doc.Save(fileName);
-
-                }
+                var parents = GetAllParents();      
+                             CreateXML(parents);
+                    
             }
+            
         }
 
-        //private List<UIControl> SetChildrenInternal(List<UIControl> children, UIControl parent, UIControl control)
-        //{
-        //    if (parent.ChildNodes!= null)
-        //    {
-        //        children.Add(control);
-        //        SetChildrenInternal(children, parent.ChildNodes[0], control);
-        //    }
-
-        //    return children;
-        //}
-
-        private static List<UIControl> SetChildrenInternal(List<UIControl> children, UIControl control)
+        private static List<UIControl> AddChild(List<UIControl> children, UIControl control)
         {
-            if (children.Count == 0)
-            {
-                children.Add(control);
-                return children;
-            }
-            else
-            {
-                children[0].ChildNodes.Add(control);
-                return children[0].ChildNodes;
-            }
+            children.Add(control);
+            return control.ChildNodes;
         }
 
-        private static XmlDocument CreateXML(List<TreeNode> parents)
+        private static void CreateXML(List<TreeNode> parents)
         {
-            var fileName = @"C:\Temp\nodes.xsd";
+            var fileName = @"C:\Temp\ObjectRepo.xml";
             UIControl control;
             RepositoryUtility utility = new RepositoryUtility();
             RepositoryNode nodeInfo = utility.ReadData(fileName);
@@ -890,10 +683,8 @@ namespace VisualUIAVerify.Controls
                 nodeInfo = new RepositoryNode();
             }
 
-            XmlDocument doc = new XmlDocument();
-            // XmlElement CreateRootElement = doc.CreateElement("Root");
-            //var prevElement = CreateRootElement;
-            List<UIControl> temp = nodeInfo.ChildNodes;
+            List<UIControl> childList = nodeInfo.ChildNodes;
+            bool isChildAdded = false;
             foreach (var node in parents)
             {
                 control = new UIControl();
@@ -904,77 +695,43 @@ namespace VisualUIAVerify.Controls
                 var ElementInfo = aeNode.AutomationElement.Current;
                 control.Name = ElementInfo.Name;
                 checkEmptyElement(control, ElementInfo);
-                temp = SetChildrenInternal(temp, control);
-                //nodeInfo.ChildNodes.Add(control);
+                int index = -1;
+                if (FindControl(childList, control, out index))
+                {
+                    childList = childList[index].ChildNodes;
+                }
+                else
+                { childList = AddChild(childList, control); isChildAdded = true; }
             }
-
+            if (!isChildAdded)
+                MessageBox.Show("Element already existing ...");
             utility.WriteData(nodeInfo, fileName);
-            return doc;
-
 
         }
 
-        private static void UpdateXMl(List<TreeNode> parents, XmlDocument doc, string fileName)
+        static bool FindControl(List<UIControl> childList, UIControl node, out int index)
         {
-            UIControl control1 = new UIControl();
-            string xpath = @"//Root/Node";
-            TreeNode node; XmlNode parent = null; int i = 0;
-            for (; i < parents.Count; i++)
+            for (int i = 0; i < childList.Count; i++)
             {
-                node = parents[i];
-                var aeNode = (AutomationElementTreeNode)node.Tag;
-                var ElementInfo = aeNode.AutomationElement.Current;
-                var nodes = doc.SelectNodes(xpath);
-                bool insertNow = false;
-                foreach (XmlNode node1 in nodes)
+                if (childList[i].Name == node.Name)
                 {
-                    insertNow = true;
-                    XmlNode propName, propId;
-                    propName = ((System.Xml.XmlElement)node1).SelectSingleNode("SearchCriteria/Property[@Name]");
-                    propId = ((System.Xml.XmlElement)node1).SelectSingleNode("SearchCriteria/Property[@AutomationId]");
-                    if (propName != null &&
-                        propName.Attributes[0].Value == ElementInfo.Name && propId != null &&
-                         propId.Attributes[0].Value == ElementInfo.AutomationId)
-                    { parent = node1; insertNow = false; break; }
-                    else if (propName == null &&
-                         propId != null &&
-                        propId.Attributes[0].Value == ElementInfo.AutomationId)
-                    { parent = node1; insertNow = false; break; }
-                    else if (propId == null &&
-                         propName != null &&
-                        propName.Attributes[0].Value == ElementInfo.Name)
-                    { parent = node1; insertNow = false; break; }
-                }
-                if (insertNow)
-                {
-                    for (int j = i; j < parents.Count; j++)
+                    bool allPropsMatched = true;
+                    foreach (Property prop in node.SearchCriteria.SearchProperties)
                     {
-                        node = parents[j];
-                        aeNode = (AutomationElementTreeNode)node.Tag;
-                        ElementInfo = aeNode.AutomationElement.Current;
-                        XmlElement childInfo = doc.CreateElement("Node");
-                        // ElementInfo = CheckDisplayName(ElementInfo, childInfo);
-                        childInfo.SetAttribute(XMLAttributes.ApplicationType.ToString(), ApplicationType.Windows.ToString());
-                        childInfo.SetAttribute(XMLAttributes.TechnologyName.ToString(), TechnologyName.White.ToString());
-                        XmlElement searchCritchild = doc.CreateElement("SearchCriteria");
-                        XmlElement SearchProperty = doc.CreateElement("SearchProperty");
-                        checkEmptyElement(control1, ElementInfo);
-                        SearchProperty.AppendChild(childInfo);
-                        childInfo.AppendChild(searchCritchild);
-
-                        if (parent == null)
-                            parent = doc.SelectNodes(@"//Root")[0];
-                        parent.AppendChild(childInfo);
-
-                        parent = childInfo;
+                        if (!childList[i].SearchCriteria.SearchProperties.Contains(prop))
+                        {
+                            allPropsMatched = false;
+                        }
                     }
-                    break;
+                    if (allPropsMatched)
+                    {
+                        index = i;
+                        return true;
+                    }
                 }
-                xpath = xpath + @" / Node";
             }
-            doc.Save(fileName);
-            if (i == parents.Count)
-                MessageBox.Show("Element already exists");
+            index = -1;
+            return false;
         }
 
 
@@ -999,30 +756,6 @@ namespace VisualUIAVerify.Controls
                 control.SearchCriteria.SearchProperties.Add("ControlType", ElementInfo.LocalizedControlType);
             }
         }
-
-        /*    private static string getFileName(ref XmlDocument doc, ref bool noRoot)
-            {
-                var folderName = @"C:\ObjectRepo\";
-                var fileName = folderName + "NameMapping.repo";
-
-                if (!System.IO.Directory.Exists(folderName))
-                {
-                    System.IO.Directory.CreateDirectory(folderName);
-
-                }
-                if (File.Exists(fileName))
-                {
-                    doc = new XmlDocument();
-                    try
-                    {
-                        doc.Load(fileName);
-                    }
-                    catch { noRoot = true; };
-                }
-
-                return fileName;
-            }*/
-
         private List<TreeNode> GetAllParents()
         {
             var parents = new List<TreeNode>();
@@ -1049,13 +782,6 @@ namespace VisualUIAVerify.Controls
             OnSelectedNodeChanged();
             SetSelectedNodeActiveColor();
         }
-
-        //private void _contextMenuStrip_Opening(object sender, CancelEventArgs e)
-        //{
-        //    AutomationElementTreeNode selectedNode = this.SelectedNode;
-        //    if (selectedNode != null)
-        //        markElementliveToolStripMenuItem.Checked = selectedNode.Live;
-        //}
 
         private void _elementsTreeView_BeforeSelect(object sender, TreeViewCancelEventArgs e)
         {
